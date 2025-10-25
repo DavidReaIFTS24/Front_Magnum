@@ -1,0 +1,160 @@
+<div class="container-fluid py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Gestión de Usuarios</h1>
+    <button class="btn btn-primary" (click)="showForm = !showForm">
+      <i class="fas fa-plus me-2"></i>
+      Nuevo Usuario
+    </button>
+  </div>
+
+  <!-- Formulario de Usuario -->
+  <div class="card mb-4" *ngIf="showForm">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        {{ isEditing ? 'Editar Usuario' : 'Nuevo Usuario' }}
+      </h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Nombre</label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="name"
+                [class.is-invalid]="userForm.get('name')?.invalid && userForm.get('name')?.touched"
+              >
+              <div class="invalid-feedback">
+                Nombre es requerido
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input
+                type="email"
+                class="form-control"
+                formControlName="email"
+                [class.is-invalid]="userForm.get('email')?.invalid && userForm.get('email')?.touched"
+              >
+              <div class="invalid-feedback" *ngIf="userForm.get('email')?.errors?.['required']">
+                Email es requerido
+              </div>
+              <div class="invalid-feedback" *ngIf="userForm.get('email')?.errors?.['email']">
+                Email no válido
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Contraseña</label>
+              <input
+                type="password"
+                class="form-control"
+                formControlName="password"
+                [class.is-invalid]="userForm.get('password')?.invalid && userForm.get('password')?.touched"
+                [placeholder]="isEditing ? 'Dejar vacío para no cambiar' : ''"
+              >
+              <div class="invalid-feedback" *ngIf="userForm.get('password')?.errors?.['minlength']">
+                Mínimo 6 caracteres
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Rol</label>
+              <select class="form-select" formControlName="role">
+                <option value="employee">Empleado</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button
+            type="submit"
+            class="btn btn-success"
+            [disabled]="userForm.invalid"
+          >
+            {{ isEditing ? 'Actualizar' : 'Crear' }}
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="resetForm()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla de Usuarios -->
+  <div class="card">
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of users">
+              <td>{{ user.name }}</td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span class="badge" [ngClass]="user.role === 'admin' ? 'bg-danger' : 'bg-info'">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="user.isActive ? 'bg-success' : 'bg-secondary'">
+                  {{ user.isActive ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <button
+                    class="btn btn-outline-primary"
+                    (click)="editUser(user)"
+                    title="Editar"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button
+                    class="btn"
+                    [class]="user.isActive ? 'btn-outline-warning' : 'btn-outline-success'"
+                    (click)="toggleUserStatus(user)"
+                    [title]="user.isActive ? 'Desactivar' : 'Activar'"
+                  >
+                    <i class="fas" [class.fa-times]="user.isActive" [class.fa-check]="!user.isActive"></i>
+                  </button>
+                  <button
+                    class="btn btn-outline-danger"
+                    (click)="deleteUser(user)"
+                    title="Eliminar"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

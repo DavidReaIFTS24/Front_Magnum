@@ -1,0 +1,10 @@
+/* Estilos para el componente principal */
+.auth-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+main:not(.auth-page) {
+  min-height: calc(100vh - 56px); /* Restar altura del header */
+  background-color: #f8f9fa;
+}

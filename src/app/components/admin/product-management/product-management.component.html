@@ -1,0 +1,284 @@
+<div class="container-fluid py-4">
+  <!-- Encabezado con título y botón de acción -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3">Gestión de Productos</h1>
+    <button class="btn btn-primary" (click)="showForm = !showForm">
+      <i class="fas fa-plus me-2"></i>
+      Nuevo Producto
+    </button>
+  </div>
+
+  <!-- Formulario de Producto -->
+  <div class="card mb-4" *ngIf="showForm">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        <i class="fas" [class.fa-edit]="isEditing" [class.fa-plus]="!isEditing"></i>
+        {{ isEditing ? 'Editar Producto' : 'Nuevo Producto' }}
+      </h5>
+    </div>
+    <div class="card-body">
+      <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+        <div class="row">
+          <!-- Campo Nombre -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Nombre del Producto <span class="text-danger">*</span></label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="name"
+                [class.is-invalid]="name?.invalid && name?.touched"
+                placeholder="Ingrese el nombre del producto"
+              >
+              <div class="invalid-feedback" *ngIf="name?.errors?.['required']">
+                El nombre es requerido
+              </div>
+              <div class="invalid-feedback" *ngIf="name?.errors?.['minlength']">
+                Mínimo 3 caracteres
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo Categoría -->
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Categoría <span class="text-danger">*</span></label>
+              <select 
+                class="form-select" 
+                formControlName="category"
+                [class.is-invalid]="category?.invalid && category?.touched"
+              >
+                <option value="">Seleccione una categoría</option>
+                <option *ngFor="let cat of categories" [value]="cat">
+                  {{ cat }}
+                </option>
+              </select>
+              <div class="invalid-feedback">
+                La categoría es requerida
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Campo Descripción -->
+        <div class="mb-3">
+          <label class="form-label">Descripción <span class="text-danger">*</span></label>
+          <textarea
+            class="form-control"
+            formControlName="description"
+            [class.is-invalid]="description?.invalid && description?.touched"
+            rows="3"
+            placeholder="Describa el producto..."
+          ></textarea>
+          <div class="invalid-feedback" *ngIf="description?.errors?.['required']">
+            La descripción es requerida
+          </div>
+          <div class="invalid-feedback" *ngIf="description?.errors?.['minlength']">
+            Mínimo 10 caracteres
+          </div>
+          <div class="form-text">
+            {{ description?.value?.length || 0 }}/10 caracteres
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Campo Precio -->
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">Precio <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input
+                  type="number"
+                  class="form-control"
+                  formControlName="price"
+                  [class.is-invalid]="price?.invalid && price?.touched"
+                  min="0"
+                  step="0.01"
+                >
+              </div>
+              <div class="invalid-feedback" *ngIf="price?.errors?.['required']">
+                El precio es requerido
+              </div>
+              <div class="invalid-feedback" *ngIf="price?.errors?.['min']">
+                El precio debe ser mayor o igual a 0
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo Stock -->
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">Stock <span class="text-danger">*</span></label>
+              <input
+                type="number"
+                class="form-control"
+                formControlName="stock"
+                [class.is-invalid]="stock?.invalid && stock?.touched"
+                min="0"
+              >
+              <div class="invalid-feedback" *ngIf="stock?.errors?.['required']">
+                El stock es requerido
+              </div>
+              <div class="invalid-feedback" *ngIf="stock?.errors?.['min']">
+                El stock debe ser mayor o igual a 0
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo URL de Imagen -->
+          <div class="col-md-4">
+            <div class="mb-3">
+              <label class="form-label">URL de Imagen</label>
+              <input
+                type="url"
+                class="form-control"
+                formControlName="imageUrl"
+                placeholder="https://ejemplo.com/imagen.jpg"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción del formulario -->
+        <div class="d-flex gap-2">
+          <button
+            type="submit"
+            class="btn btn-success"
+            [disabled]="productForm.invalid"
+          >
+            <i class="fas" [class.fa-save]="isEditing" [class.fa-check]="!isEditing"></i>
+            {{ isEditing ? 'Actualizar' : 'Crear' }} Producto
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="resetForm()"
+          >
+            <i class="fas fa-times me-1"></i>
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla de Productos -->
+  <div class="card">
+    <div class="card-header">
+      <h5 class="card-title mb-0">
+        <i class="fas fa-boxes me-2"></i>
+        Lista de Productos ({{ products.length }})
+      </h5>
+    </div>
+    <div class="card-body">
+      <!-- Mensaje cuando no hay productos -->
+      <div *ngIf="products.length === 0" class="text-center py-4">
+        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+        <h5>No hay productos</h5>
+        <p class="text-muted">Comienza agregando tu primer producto.</p>
+        <button class="btn btn-primary" (click)="showForm = true">
+          <i class="fas fa-plus me-1"></i>
+          Agregar Producto
+        </button>
+      </div>
+
+      <!-- Tabla de productos -->
+      <div class="table-responsive" *ngIf="products.length > 0">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th>Descripción</th>
+              <th>Precio</th>
+              <th>Stock</th>
+              <th>Categoría</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let product of products" 
+                [class.table-warning]="product.stock < 10"
+                [class.table-danger]="product.stock < 3">
+              <td>
+                <div class="d-flex align-items-center">
+                  <!-- Imagen del producto (si existe) -->
+                  <img *ngIf="product.imageUrl" 
+                       [src]="product.imageUrl" 
+                       alt="{{ product.name }}"
+                       class="rounded me-2"
+                       style="width: 40px; height: 40px; object-fit: cover;">
+                  <div>
+                    <strong>{{ product.name }}</strong>
+                    <div class="text-muted small">
+                      {{ product.createdAt | date:'shortDate' }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="text-truncate d-inline-block" style="max-width: 200px;">
+                  {{ product.description }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-success">${{ product.price }}</span>
+              </td>
+              <td>
+                <span class="badge" 
+                      [class.bg-danger]="product.stock < 3"
+                      [class.bg-warning]="product.stock >= 3 && product.stock < 10"
+                      [class.bg-success]="product.stock >= 10">
+                  {{ product.stock }}
+                </span>
+              </td>
+              <td>
+                <span class="badge bg-info">{{ product.category }}</span>
+              </td>
+              <td>
+                <span class="badge" 
+                      [class.bg-success]="product.isActive" 
+                      [class.bg-secondary]="!product.isActive">
+                  {{ product.isActive ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td>
+                <div class="btn-group btn-group-sm">
+                  <!-- Botón Editar -->
+                  <button
+                    class="btn btn-outline-primary"
+                    (click)="editProduct(product)"
+                    title="Editar"
+                  >
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  
+                  <!-- Botón Activar/Desactivar -->
+                  <button
+                    class="btn"
+                    [class.btn-outline-warning]="product.isActive"
+                    [class.btn-outline-success]="!product.isActive"
+                    (click)="toggleProductStatus(product)"
+                    [title]="product.isActive ? 'Desactivar' : 'Activar'"
+                  >
+                    <i class="fas" [class.fa-times]="product.isActive" [class.fa-check]="!product.isActive"></i>
+                  </button>
+                  
+                  <!-- Botón Eliminar -->
+                  <button
+                    class="btn btn-outline-danger"
+                    (click)="deleteProduct(product)"
+                    title="Eliminar"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>

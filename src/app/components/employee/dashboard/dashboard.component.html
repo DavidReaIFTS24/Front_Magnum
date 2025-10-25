@@ -1,0 +1,193 @@
+<!-- Dashboard para empleados - Vista limitada -->
+<div class="container-fluid py-4">
+  <div class="row">
+    <div class="col-12">
+      <!-- Encabezado con bienvenida personalizada -->
+      <h1 class="h3 mb-2">Bienvenido, {{ currentUser?.name }}</h1>
+      <p class="text-muted mb-4">Panel de control para empleados</p>
+    </div>
+  </div>
+
+  <!-- Tarjetas de resumen -->
+  <div class="row mb-4">
+    <!-- Tarjeta de total de productos -->
+    <div class="col-md-6 col-lg-4 mb-3">
+      <div class="card bg-primary text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4 class="card-title">{{ getTotalProducts() }}</h4>
+              <p class="card-text">Total Productos</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-boxes fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta de stock bajo -->
+    <div class="col-md-6 col-lg-4 mb-3">
+      <div class="card bg-warning text-dark">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4 class="card-title">{{ getLowStockCount() }}</h4>
+              <p class="card-text">Stock Bajo</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-exclamation-triangle fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta de estado -->
+    <div class="col-md-6 col-lg-4 mb-3">
+      <div class="card bg-success text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4 class="card-title">Activo</h4>
+              <p class="card-text">Estado</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-user-check fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de productos con stock bajo -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-exclamation-circle text-warning me-2"></i>
+            Productos con Stock Bajo (menos de 10 unidades)
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Tabla de productos con stock bajo -->
+          <div class="table-responsive" *ngIf="lowStockProducts.length > 0; else noLowStock">
+            <table class="table table-striped table-hover">
+              <thead class="table-warning">
+                <tr>
+                  <th>Producto</th>
+                  <th>Descripción</th>
+                  <th>Precio</th>
+                  <th>Stock Actual</th>
+                  <th>Categoría</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Iterar sobre productos con stock bajo -->
+                <tr *ngFor="let product of lowStockProducts" 
+                    class="cursor-pointer"
+                    [class.table-warning]="product.stock < 5">
+                  <td>
+                    <strong>{{ product.name }}</strong>
+                  </td>
+                  <td>{{ product.description | slice:0:50 }}{{ product.description.length > 50 ? '...' : '' }}</td>
+                  <td>
+                    <span class="badge bg-success">${{ product.price }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" 
+                          [class.bg-danger]="product.stock < 3"
+                          [class.bg-warning]="product.stock >= 3 && product.stock < 10">
+                      {{ product.stock }} unidades
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge bg-info">{{ product.category }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mensaje cuando no hay productos con stock bajo -->
+          <ng-template #noLowStock>
+            <div class="text-center py-4">
+              <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+              <h5>¡Excelente!</h5>
+              <p class="text-muted">No hay productos con stock bajo.</p>
+            </div>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información del perfil del empleado -->
+  <div class="row mt-4">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-user me-2"></i>
+            Mi Información
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Mostrar información del usuario actual -->
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Nombre:</div>
+            <div class="col-sm-8">{{ currentUser?.name }}</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4 fw-bold">Email:</div>
+            <div class="col-sm-8">{{ currentUser?.email }}</div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4 fw-bold">Rol:</div>
+            <div class="col-sm-8">
+              <span class="badge bg-info">{{ currentUser?.role }}</span>
+            </div>
+          </div>
+          <div class="row mt-2">
+            <div class="col-sm-4 fw-bold">Estado:</div>
+            <div class="col-sm-8">
+              <span class="badge bg-success">Activo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones rápidas para empleados -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="card-title mb-0">
+            <i class="fas fa-bolt me-2"></i>
+            Acciones Rápidas
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="d-grid gap-2">
+            <!-- Botones de acciones para empleados -->
+            <button class="btn btn-outline-primary btn-sm">
+              <i class="fas fa-list me-1"></i>
+              Ver Todos los Productos
+            </button>
+            <button class="btn btn-outline-warning btn-sm">
+              <i class="fas fa-chart-bar me-1"></i>
+              Reporte de Stock
+            </button>
+            <button class="btn btn-outline-info btn-sm">
+              <i class="fas fa-question-circle me-1"></i>
+              Solicitar Ayuda
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

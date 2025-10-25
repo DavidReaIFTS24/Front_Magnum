@@ -1,0 +1,27 @@
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">
+      <i class="fas fa-store me-2"></i>
+      Sistema Magnum
+    </a>
+    
+    <div class="navbar-nav ms-auto">
+      <div class="nav-item dropdown" *ngIf="currentUser">
+        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+          <i class="fas fa-user me-1"></i>
+          {{ currentUser.name }}
+          <small class="badge bg-light text-dark ms-1">{{ currentUser.role }}</small>
+        </a>
+        <ul class="dropdown-menu">
+          <li><a class="dropdown-item" href="#"><i class="fas fa-user me-2"></i>Perfil</a></li>
+          <li><hr class="dropdown-divider"></li>
+          <li>
+            <a class="dropdown-item text-danger" href="#" (click)="logout()">
+              <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
