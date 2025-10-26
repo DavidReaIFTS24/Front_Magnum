@@ -24,22 +24,43 @@
         <div class="row">
           <div class="col-md-6">
             <div class="mb-3">
-              <label class="form-label">Nombre Completo <span class="text-danger">*</span></label>
+              <label class="form-label">Nombre <span class="text-danger">*</span></label>
               <input
                 type="text"
                 class="form-control"
-                formControlName="name"
-                [class.is-invalid]="name?.invalid && name?.touched"
-                placeholder="Ingresa el nombre completo"
+                formControlName="nombre"
+                [class.is-invalid]="nombre?.invalid && nombre?.touched"
+                placeholder="Ingresa el nombre"
               >
-              <div class="invalid-feedback" *ngIf="name?.errors?.['required'] && name?.touched">
+              <div class="invalid-feedback" *ngIf="nombre?.errors?.['required'] && nombre?.touched">
                 El nombre es requerido
               </div>
-              <div class="invalid-feedback" *ngIf="name?.errors?.['minlength'] && name?.touched">
+              <div class="invalid-feedback" *ngIf="nombre?.errors?.['minlength'] && nombre?.touched">
                 Mínimo 2 caracteres
               </div>
             </div>
           </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label class="form-label">Apellido <span class="text-danger">*</span></label>
+              <input
+                type="text"
+                class="form-control"
+                formControlName="apellido"
+                [class.is-invalid]="apellido?.invalid && apellido?.touched"
+                placeholder="Ingresa el apellido"
+              >
+              <div class="invalid-feedback" *ngIf="apellido?.errors?.['required'] && apellido?.touched">
+                El apellido es requerido
+              </div>
+              <div class="invalid-feedback" *ngIf="apellido?.errors?.['minlength'] && apellido?.touched">
+                Mínimo 2 caracteres
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Email <span class="text-danger">*</span></label>
@@ -58,9 +79,6 @@
               </div>
             </div>
           </div>
-        </div>
-
-        <div class="row">
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Contraseña {{ isEditing ? '(Opcional)' : '*' }}</label>
@@ -76,11 +94,14 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="row">
           <div class="col-md-6">
             <div class="mb-3">
               <label class="form-label">Rol <span class="text-danger">*</span></label>
               <select class="form-select" formControlName="role">
-                <option value="employee">Empleado</option>
+                <option value="empleado">Empleado</option>
                 <option value="admin">Administrador</option>
               </select>
             </div>
@@ -168,7 +189,7 @@
               <td>{{ user.email }}</td>
               <td>
                 <span class="badge" [ngClass]="getRoleBadgeClass(user.role)">
-                  {{ user.role === 'admin' ? 'Administrador' : 'Empleado' }}
+                  {{ getRoleDisplayText(user.role) }}
                 </span>
               </td>
               <td>

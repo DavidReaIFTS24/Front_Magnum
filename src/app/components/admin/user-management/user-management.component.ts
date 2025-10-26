@@ -25,10 +25,13 @@ export class UserManagementComponent implements OnInit {
     private formBuilder: FormBuilder
   ) {
     this.userForm = this.formBuilder.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
+      // 🆕 CAMBIADO: Separar nombre y apellido
+      nombre: ['', [Validators.required, Validators.minLength(2)]],
+      apellido: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.minLength(6)]],
-      role: ['employee', Validators.required]
+      // 🆕 CAMBIADO: Usar roles en español para el backend
+      role: ['empleado', Validators.required]
     });
   }
 
@@ -42,29 +45,13 @@ export class UserManagementComponent implements OnInit {
       next: (users) => {
         this.users = users;
         this.loading = false;
+        console.log('✅ Usuarios cargados:', this.users);
       },
       error: (error) => {
-        console.error('Error cargando usuarios:', error);
+        console.error('❌ Error cargando usuarios:', error);
         this.loading = false;
-        // Mock data para testing
-        this.users = [
-          {
-            id: 'USER-101',
-            email: 'admin@magnum.com',
-            name: 'Carlos Magnum',
-            role: 'admin',
-            createdAt: new Date(),
-            isActive: true
-          },
-          {
-            id: 'USER-102',
-            email: 'empleado@magnum.com',
-            name: 'Ana Garcia',
-            role: 'employee',
-            createdAt: new Date(),
-            isActive: true
-          }
-        ];
+        // Mock data para testing (opcional)
+        this.users = this.getMockUsers();
       }
     });
   }
@@ -72,13 +59,23 @@ export class UserManagementComponent implements OnInit {
   onSubmit() {
     if (this.userForm.valid) {
       this.actionLoading = true;
+      
+      // 🆕 CONSTRUIR UserData correctamente
       const userData: User = {
-        ...this.userForm.value,
+        email: this.userForm.value.email,
+        name: `${this.userForm.value.nombre} ${this.userForm.value.apellido}`.trim(),
+        role: this.userForm.value.role,
+        isActive: true,
         createdAt: this.isEditing && this.selectedUser ? this.selectedUser.createdAt : new Date(),
-        isActive: true
+        // 🆕 Campos adicionales para el servicio
+        nombre: this.userForm.value.nombre,
+        apellido: this.userForm.value.apellido,
+        password: this.userForm.value.password || undefined
       };
 
-      if (this.isEditing && this.selectedUser && this.selectedUser.id) { // ← CORREGIDO: Verificar id
+      console.log('📤 Enviando datos:', userData);
+
+      if (this.isEditing && this.selectedUser?.id) {
         this.updateUser(userData);
       } else {
         this.createUser(userData);
@@ -94,32 +91,25 @@ export class UserManagementComponent implements OnInit {
         this.users.push(newUser);
         this.resetForm();
         this.actionLoading = false;
+        console.log('✅ Usuario creado:', newUser);
       },
       error: (error) => {
-        console.error('Error creando usuario:', error);
-        // Mock para testing
-        const mockUser: User = {
-          ...userData,
-          id: 'USER-' + Date.now(),
-          createdAt: new Date(),
-          isActive: true
-        };
-        this.users.push(mockUser);
-        this.resetForm();
+        console.error('❌ Error creando usuario:', error);
         this.actionLoading = false;
+        // Opcional: Mock para testing
+        // this.handleMockCreate(userData);
       }
     });
   }
 
   updateUser(userData: User) {
-    // CORREGIDO: Verificar que selectedUser y su id existan
     if (!this.selectedUser?.id) {
       console.error('No se puede actualizar: usuario o ID no válido');
       this.actionLoading = false;
       return;
     }
 
-    this.userService.updateUser(this.selectedUser.id, userData).subscribe({ // ← Ahora seguro que existe
+    this.userService.updateUser(this.selectedUser.id, userData).subscribe({
       next: (updatedUser) => {
         const index = this.users.findIndex(u => u.id === this.selectedUser?.id);
         if (index !== -1) {
@@ -127,15 +117,10 @@ export class UserManagementComponent implements OnInit {
         }
         this.resetForm();
         this.actionLoading = false;
+        console.log('✅ Usuario actualizado:', updatedUser);
       },
       error: (error) => {
-        console.error('Error actualizando usuario:', error);
-        // Mock para testing
-        const index = this.users.findIndex(u => u.id === this.selectedUser?.id);
-        if (index !== -1 && this.selectedUser) {
-          this.users[index] = { ...userData, id: this.selectedUser.id };
-        }
-        this.resetForm();
+        console.error('❌ Error actualizando usuario:', error);
         this.actionLoading = false;
       }
     });
@@ -146,10 +131,12 @@ export class UserManagementComponent implements OnInit {
     this.selectedUser = user;
     this.showForm = true;
     
+    // 🆕 Rellenar formulario con nombre y apellido separados
     this.userForm.patchValue({
-      name: user.name,
+      nombre: user.nombre || this.extractFirstName(user.name),
+      apellido: user.apellido || this.extractLastName(user.name),
       email: user.email,
-      role: user.role
+      role: user.role // El servicio ya mapea los roles
     });
     
     // Limpiar validación de password en edición
@@ -170,11 +157,10 @@ export class UserManagementComponent implements OnInit {
         next: () => {
           this.users = this.users.filter(u => u.id !== user.id);
           this.actionLoading = false;
+          console.log('✅ Usuario eliminado');
         },
         error: (error) => {
-          console.error('Error eliminando usuario:', error);
-          // Mock para testing
-          this.users = this.users.filter(u => u.id !== user.id);
+          console.error('❌ Error eliminando usuario:', error);
           this.actionLoading = false;
         }
       });
@@ -200,12 +186,7 @@ export class UserManagementComponent implements OnInit {
         this.actionLoading = false;
       },
       error: (error) => {
-        console.error('Error actualizando estado:', error);
-        // Mock para testing
-        const index = this.users.findIndex(u => u.id === user.id);
-        if (index !== -1) {
-          this.users[index] = updatedUser;
-        }
+        console.error('❌ Error actualizando estado:', error);
         this.actionLoading = false;
       }
     });
@@ -213,7 +194,7 @@ export class UserManagementComponent implements OnInit {
 
   resetForm() {
     this.userForm.reset({
-      role: 'employee'
+      role: 'empleado' // 🆕 CAMBIADO a español
     });
     this.isEditing = false;
     this.selectedUser = null;
@@ -231,11 +212,54 @@ export class UserManagementComponent implements OnInit {
     });
   }
 
+  // 🆕 MÉTODOS AUXILIARES PARA NOMBRE/APELLIDO
+  private extractFirstName(fullName: string): string {
+    return fullName.split(' ')[0] || '';
+  }
+
+  private extractLastName(fullName: string): string {
+    const parts = fullName.split(' ');
+    return parts.length > 1 ? parts.slice(1).join(' ') : '';
+  }
+
+  // 🆕 MOCK DATA PARA TESTING (opcional)
+  private getMockUsers(): User[] {
+    return [
+      {
+        id: 'USER-101',
+        email: 'admin@magnum.com',
+        name: 'Carlos Magnum',
+        role: 'admin',
+        createdAt: new Date(),
+        isActive: true,
+        nombre: 'Carlos',
+        apellido: 'Magnum'
+      },
+      {
+        id: 'USER-102',
+        email: 'empleado@magnum.com',
+        name: 'Ana Garcia',
+        role: 'employee',
+        createdAt: new Date(),
+        isActive: true,
+        nombre: 'Ana',
+        apellido: 'Garcia'
+      }
+    ];
+  }
+
+  // 🆕 GETTERS ACTUALIZADOS
+  get nombre() { return this.userForm.get('nombre'); }
+  get apellido() { return this.userForm.get('apellido'); }
+  get email() { return this.userForm.get('email'); }
+  get password() { return this.userForm.get('password'); }
+  get role() { return this.userForm.get('role'); }
+
   getRoleBadgeClass(role: string): string {
     return role === 'admin' ? 'bg-danger' : 'bg-info';
   }
 
-  get name() { return this.userForm.get('name'); }
-  get email() { return this.userForm.get('email'); }
-  get password() { return this.userForm.get('password'); }
+  getRoleDisplayText(role: string): string {
+    return role === 'admin' ? 'Administrador' : 'Empleado';
+  }
 }

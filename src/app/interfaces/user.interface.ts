@@ -5,6 +5,10 @@ export interface User {
   role: 'admin' | 'employee';
   createdAt: Date;
   isActive: boolean;
+  // Campos adicionales para el formulario
+  nombre?: string;
+  apellido?: string;
+  password?: string; // Solo para creación
 }
 
 export interface LoginCredentials {

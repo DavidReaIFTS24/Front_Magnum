@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment';
+import { ApiService } from './api.service';
 import { User, LoginCredentials, AuthResponse } from '../interfaces/user.interface';
 
 @Injectable({
@@ -11,10 +10,9 @@ import { User, LoginCredentials, AuthResponse } from '../interfaces/user.interfa
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-  private apiUrl = environment.apiUrl;
 
   constructor(
-    private http: HttpClient,
+    private apiService: ApiService, // ✅ CORREGIDO: Usar ApiService en lugar de HttpClient
     private router: Router
   ) {
     this.loadUserFromStorage();
@@ -46,12 +44,12 @@ export class AuthService {
   }
 
   login(credentials: LoginCredentials): Observable<any> {
-    const url = `${this.apiUrl}/auth/login`;
-    console.log('📤 Haciendo request a:', url);
+    console.log('📤 Enviando login a /auth/login via ApiService');
     
-    return this.http.post<any>(url, credentials).pipe(
+    // ✅ CORRECCIÓN: Usar apiService en lugar de http
+    return this.apiService.post<any>('auth/login', credentials).pipe(
       tap(response => {
-        console.log('🔵 Respuesta del backend:', response);
+        console.log('🔵 Respuesta completa del backend:', response);
         
         // ESTRUCTURA CORRECTA BASADA EN POSTMAN:
         const token = response.token;
@@ -63,7 +61,7 @@ export class AuthService {
             id: usuario.id,
             email: usuario.email,
             name: usuario.nombre + (usuario.apellido ? ' ' + usuario.apellido : ''),
-            role: this.mapRole(usuario.rol), // ← CORREGIDO: Mapear rol español → inglés
+            role: this.mapRole(usuario.rol),
             createdAt: new Date(),
             isActive: true
           };
@@ -74,12 +72,13 @@ export class AuthService {
           this.setUser(userData, token);
         } else {
           console.error('❌ No se pudo extraer usuario o token de la respuesta');
+          throw new Error('Respuesta inválida del servidor');
         }
       })
     );
   }
 
-  // MÉTODO NUEVO: Mapear roles de español a inglés
+  // MÉTODO: Mapear roles de español a inglés
   private mapRole(rol: string): 'admin' | 'employee' {
     console.log('🔵 Mapeando rol:', rol);
     
@@ -121,7 +120,7 @@ export class AuthService {
     }
   }
 
-  // MÉTODO NUEVO: Redirigir basado en el rol
+  // MÉTODO: Redirigir basado en el rol
   private redirectBasedOnRole(role: string) {
     console.log('🔵 Redirigiendo basado en rol:', role);
     
@@ -157,5 +156,39 @@ export class AuthService {
   getToken(): string | null {
     const token = localStorage.getItem('token');
     return (token && token !== 'undefined' && token !== 'null') ? token : null;
+  }
+
+  // Método para verificar si el usuario está autenticado y tiene un rol específico
+  hasAnyRole(roles: string[]): boolean {
+    const user = this.getCurrentUser();
+    return user ? roles.includes(user.role) : false;
+  }
+
+  // Método para refrescar el usuario desde el storage
+  refreshUser() {
+    this.loadUserFromStorage();
+  }
+
+  // Método para verificar expiración del token (básico)
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const exp = payload.exp * 1000; // Convertir a milisegundos
+      return Date.now() >= exp;
+    } catch (error) {
+      console.error('❌ Error al verificar token:', error);
+      return true;
+    }
+  }
+
+  // Método para auto-logout si el token expiró
+  checkTokenExpiration() {
+    if (this.isTokenExpired()) {
+      console.log('🔐 Token expirado, haciendo logout automático');
+      this.logout();
+    }
   }
 }

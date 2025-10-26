@@ -6,20 +6,6 @@
         <p class="text-center mb-0">Iniciar Sesión</p>
       </div>
       <div class="card-body">
-        <!-- Botones de prueba rápida -->
-        <div class="row mb-3">
-          <div class="col-6">
-            <button class="btn btn-sm btn-outline-primary w-100" (click)="quickLogin('admin')">
-              Test Admin
-            </button>
-          </div>
-          <div class="col-6">
-            <button class="btn btn-sm btn-outline-secondary w-100" (click)="quickLogin('employee')">
-              Test Employee
-            </button>
-          </div>
-        </div>
-
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <!-- Campo Email -->
           <div class="mb-3">
@@ -77,15 +63,6 @@
             {{ error }}
           </div>
         </form>
-
-        <!-- Información de debug -->
-        <div class="mt-4 p-3 bg-light rounded">
-          <small class="text-muted">
-            <strong>Credenciales de prueba:</strong><br>
-            Admin: admin@magnum.com / 123456<br>
-            Employee: empleado@magnum.com / 123456
-          </small>
-        </div>
       </div>
     </div>
   </div>

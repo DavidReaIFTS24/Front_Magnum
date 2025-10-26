@@ -204,6 +204,7 @@ export class ProductManagementComponent implements OnInit {
       this.productForm.get(key)?.markAsTouched();
     });
   }
+  
 
   getStockBadgeClass(cantidad: number | undefined, minimo: number | undefined): string {
     const stock = cantidad || 0;
