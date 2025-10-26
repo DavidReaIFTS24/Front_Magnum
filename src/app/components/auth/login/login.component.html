@@ -3,9 +3,11 @@
     <div class="card">
       <div class="card-header">
         <h3 class="text-center">Sistema Magnum</h3>
+        <p class="text-center mb-0">Iniciar Sesión</p>
       </div>
       <div class="card-body">
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <!-- Campo Email -->
           <div class="mb-3">
             <label for="email" class="form-label">Email</label>
             <input
@@ -13,17 +15,18 @@
               class="form-control"
               id="email"
               formControlName="email"
-              [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+              [class.is-invalid]="email?.invalid && email?.touched"
               placeholder="usuario@ejemplo.com"
             >
-            <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['required']">
-              Email es requerido
+            <div class="invalid-feedback" *ngIf="email?.errors?.['required'] && email?.touched">
+              El email es requerido
             </div>
-            <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['email']">
-              Email no válido
+            <div class="invalid-feedback" *ngIf="email?.errors?.['email'] && email?.touched">
+              Por favor ingresa un email válido
             </div>
           </div>
 
+          <!-- Campo Contraseña -->
           <div class="mb-3">
             <label for="password" class="form-label">Contraseña</label>
             <input
@@ -31,21 +34,22 @@
               class="form-control"
               id="password"
               formControlName="password"
-              [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-              placeholder="••••••"
+              [class.is-invalid]="password?.invalid && password?.touched"
+              placeholder="Ingresa tu contraseña"
             >
-            <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['required']">
-              Contraseña es requerida
+            <div class="invalid-feedback" *ngIf="password?.errors?.['required'] && password?.touched">
+              La contraseña es requerida
             </div>
-            <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['minlength']">
-              Mínimo 6 caracteres
+            <div class="invalid-feedback" *ngIf="password?.errors?.['minlength'] && password?.touched">
+              La contraseña debe tener al menos 6 caracteres
             </div>
           </div>
 
+          <!-- Botón de Submit -->
           <div class="d-grid">
             <button
               type="submit"
-              class="btn btn-primary"
+              class="btn btn-primary btn-lg"
               [disabled]="loginForm.invalid || loading"
             >
               <span *ngIf="loading" class="spinner-border spinner-border-sm me-2"></span>
@@ -53,10 +57,22 @@
             </button>
           </div>
 
-          <div *ngIf="error" class="alert alert-danger mt-3">
+          <!-- Mensajes de Error -->
+          <div *ngIf="error" class="alert alert-danger mt-3 mb-0">
+            <i class="fas fa-exclamation-triangle me-2"></i>
             {{ error }}
           </div>
         </form>
+
+        <!-- Información de debug (puedes quitarlo después) -->
+        <div class="mt-4 p-3 bg-light rounded">
+          <small class="text-muted">
+            <strong>Debug Info:</strong><br>
+            Backend: {{ 'http://localhost:3000/api/auth/login' }}<br>
+            Form válido: {{ loginForm.valid }}<br>
+            Email válido: {{ email?.valid }}
+          </small>
+        </div>
       </div>
     </div>
   </div>
