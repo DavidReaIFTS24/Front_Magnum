@@ -54,34 +54,22 @@ export class AuthService {
         console.log('🔵 Respuesta del backend:', response);
         
         // ESTRUCTURA CORRECTA BASADA EN POSTMAN:
-        // {
-        //   "message": "Login exitoso",
-        //   "token": "eyJ...",
-        //   "usuario": {
-        //     "id": "USER-101",
-        //     "email": "admin@magnum.com",
-        //     "nombre": "Carlos",
-        //     "apellido": "Magnum", 
-        //     "rol": "admin"
-        //   }
-        // }
-        
         const token = response.token;
         const usuario = response.usuario;
 
         if (usuario && token) {
-          // MAPEAR LA ESTRUCTURA ESPAÑOL → INGLÉS
+          // MAPEAR LA ESTRUCTURA ESPAÑOL → INGLÉS Y ROLES
           const userData: User = {
             id: usuario.id,
             email: usuario.email,
-            name: usuario.nombre + (usuario.apellido ? ' ' + usuario.apellido : ''), // Combinar nombre + apellido
-            role: usuario.rol, // ← 'rol' en español → 'role' en inglés
-            createdAt: new Date(), // Tu backend no envía createdAt, usar fecha actual
-            isActive: true // Asumir que está activo
+            name: usuario.nombre + (usuario.apellido ? ' ' + usuario.apellido : ''),
+            role: this.mapRole(usuario.rol), // ← CORREGIDO: Mapear rol español → inglés
+            createdAt: new Date(),
+            isActive: true
           };
 
           console.log('✅ User data mapeado:', userData);
-          console.log('✅ Token recibido:', token);
+          console.log('✅ Rol mapeado:', usuario.rol, '→', userData.role);
 
           this.setUser(userData, token);
         } else {
@@ -89,6 +77,24 @@ export class AuthService {
         }
       })
     );
+  }
+
+  // MÉTODO NUEVO: Mapear roles de español a inglés
+  private mapRole(rol: string): 'admin' | 'employee' {
+    console.log('🔵 Mapeando rol:', rol);
+    
+    const roleMap: { [key: string]: 'admin' | 'employee' } = {
+      'admin': 'admin',
+      'administrador': 'admin',
+      'employee': 'employee', 
+      'empleado': 'employee',
+      'emp': 'employee'
+    };
+
+    const mappedRole = roleMap[rol.toLowerCase()] || 'employee';
+    console.log('🔵 Rol mapeado:', rol, '→', mappedRole);
+    
+    return mappedRole;
   }
 
   setUser(user: User, token: string) {
@@ -106,8 +112,23 @@ export class AuthService {
       this.currentUserSubject.next(user);
       
       console.log('✅ Usuario guardado correctamente en storage:', user);
+      
+      // REDIRIGIR INMEDIATAMENTE DESPUÉS DE GUARDAR
+      this.redirectBasedOnRole(user.role);
+      
     } catch (error) {
       console.error('❌ Error al guardar usuario en storage:', error);
+    }
+  }
+
+  // MÉTODO NUEVO: Redirigir basado en el rol
+  private redirectBasedOnRole(role: string) {
+    console.log('🔵 Redirigiendo basado en rol:', role);
+    
+    if (role === 'admin') {
+      this.router.navigate(['/admin/dashboard']);
+    } else {
+      this.router.navigate(['/employee/dashboard']);
     }
   }
 

@@ -1,23 +1,37 @@
-<!-- Dashboard para empleados - Vista limitada -->
 <div class="container-fluid py-4">
-  <div class="row">
+  <!-- Header -->
+  <div class="row mb-4">
     <div class="col-12">
-      <!-- Encabezado con bienvenida personalizada -->
-      <h1 class="h3 mb-2">Bienvenido, {{ currentUser?.name }}</h1>
-      <p class="text-muted mb-4">Panel de control para empleados</p>
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-2">Dashboard Empleado</h1>
+          <p class="text-muted mb-0">Bienvenido, {{ currentUser?.name }}</p>
+        </div>
+        <button class="btn btn-outline-primary" (click)="refreshData()" [disabled]="loading">
+          <i class="fas fa-sync-alt me-2" [class.fa-spin]="loading"></i>
+          Actualizar
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- Tarjetas de resumen -->
-  <div class="row mb-4">
-    <!-- Tarjeta de total de productos -->
-    <div class="col-md-6 col-lg-4 mb-3">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-2 text-muted">Cargando información...</p>
+  </div>
+
+  <!-- Estadísticas para Empleado -->
+  <div *ngIf="!loading" class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
       <div class="card bg-primary text-white">
         <div class="card-body">
           <div class="d-flex justify-content-between">
             <div>
               <h4 class="card-title">{{ getTotalProducts() }}</h4>
-              <p class="card-text">Total Productos</p>
+              <p class="card-text">Productos Totales</p>
             </div>
             <div class="align-self-center">
               <i class="fas fa-boxes fa-2x"></i>
@@ -27,8 +41,7 @@
       </div>
     </div>
 
-    <!-- Tarjeta de stock bajo -->
-    <div class="col-md-6 col-lg-4 mb-3">
+    <div class="col-xl-3 col-md-6 mb-4">
       <div class="card bg-warning text-dark">
         <div class="card-body">
           <div class="d-flex justify-content-between">
@@ -44,17 +57,32 @@
       </div>
     </div>
 
-    <!-- Tarjeta de estado -->
-    <div class="col-md-6 col-lg-4 mb-3">
+    <div class="col-xl-3 col-md-6 mb-4">
+      <div class="card bg-danger text-white">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h4 class="card-title">{{ getCriticalStockCount() }}</h4>
+              <p class="card-text">Stock Crítico</p>
+            </div>
+            <div class="align-self-center">
+              <i class="fas fa-skull-crossbones fa-2x"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
       <div class="card bg-success text-white">
         <div class="card-body">
           <div class="d-flex justify-content-between">
             <div>
-              <h4 class="card-title">Activo</h4>
-              <p class="card-text">Estado</p>
+              <h4 class="card-title">{{ currentUser?.role | titlecase }}</h4>
+              <p class="card-text">Tu Rol</p>
             </div>
             <div class="align-self-center">
-              <i class="fas fa-user-check fa-2x"></i>
+              <i class="fas fa-user-tag fa-2x"></i>
             </div>
           </div>
         </div>
@@ -62,18 +90,17 @@
     </div>
   </div>
 
-  <!-- Sección de productos con stock bajo -->
-  <div class="row">
-    <div class="col-12">
+  <!-- Productos con Stock Bajo -->
+  <div *ngIf="!loading" class="row">
+    <div class="col-12 mb-4">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header bg-light">
           <h5 class="card-title mb-0">
             <i class="fas fa-exclamation-circle text-warning me-2"></i>
             Productos con Stock Bajo (menos de 10 unidades)
           </h5>
         </div>
         <div class="card-body">
-          <!-- Tabla de productos con stock bajo -->
           <div class="table-responsive" *ngIf="lowStockProducts.length > 0; else noLowStock">
             <table class="table table-striped table-hover">
               <thead class="table-warning">
@@ -82,37 +109,46 @@
                   <th>Descripción</th>
                   <th>Precio</th>
                   <th>Stock Actual</th>
+                  <th>Stock Mínimo</th>
                   <th>Categoría</th>
+                  <th>Estado</th>
                 </tr>
               </thead>
               <tbody>
-                <!-- Iterar sobre productos con stock bajo -->
                 <tr *ngFor="let product of lowStockProducts" 
-                    class="cursor-pointer"
-                    [class.table-warning]="product.stock < 5">
+                    [class.table-danger]="(product.cantidad || 0) < 3">
                   <td>
-                    <strong>{{ product.name }}</strong>
-                  </td>
-                  <td>{{ product.description | slice:0:50 }}{{ product.description.length > 50 ? '...' : '' }}</td>
-                  <td>
-                    <span class="badge bg-success">${{ product.price }}</span>
+                    <strong>{{ product.nombre }}</strong>
                   </td>
                   <td>
-                    <span class="badge" 
-                          [class.bg-danger]="product.stock < 3"
-                          [class.bg-warning]="product.stock >= 3 && product.stock < 10">
-                      {{ product.stock }} unidades
+                    <span class="text-truncate d-inline-block" style="max-width: 200px;">
+                      {{ product.descripcion }}
                     </span>
                   </td>
                   <td>
-                    <span class="badge bg-info">{{ product.category }}</span>
+                    <span class="badge bg-success">{{ formatCurrency(product.precio) }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="getStockBadgeClass(product.cantidad, product.minimo)">
+                      {{ product.cantidad }} unidades
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge bg-info">{{ product.minimo }} unidades</span>
+                  </td>
+                  <td>
+                    <span class="badge bg-secondary">{{ product.categoriaNombre }}</span>
+                  </td>
+                  <td>
+                    <span class="badge" [ngClass]="product.activo ? 'bg-success' : 'bg-secondary'">
+                      {{ product.activo ? 'Activo' : 'Inactivo' }}
+                    </span>
                   </td>
                 </tr>
               </tbody>
             </table>
           </div>
 
-          <!-- Mensaje cuando no hay productos con stock bajo -->
           <ng-template #noLowStock>
             <div class="text-center py-4">
               <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
@@ -125,8 +161,8 @@
     </div>
   </div>
 
-  <!-- Información del perfil del empleado -->
-  <div class="row mt-4">
+  <!-- Información del Perfil -->
+  <div *ngIf="!loading" class="row mt-4">
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
@@ -136,32 +172,35 @@
           </h5>
         </div>
         <div class="card-body">
-          <!-- Mostrar información del usuario actual -->
-          <div class="row">
+          <div class="row mb-2">
             <div class="col-sm-4 fw-bold">Nombre:</div>
             <div class="col-sm-8">{{ currentUser?.name }}</div>
           </div>
-          <div class="row mt-2">
+          <div class="row mb-2">
             <div class="col-sm-4 fw-bold">Email:</div>
             <div class="col-sm-8">{{ currentUser?.email }}</div>
           </div>
-          <div class="row mt-2">
+          <div class="row mb-2">
             <div class="col-sm-4 fw-bold">Rol:</div>
             <div class="col-sm-8">
               <span class="badge bg-info">{{ currentUser?.role }}</span>
             </div>
           </div>
-          <div class="row mt-2">
+          <div class="row mb-2">
             <div class="col-sm-4 fw-bold">Estado:</div>
             <div class="col-sm-8">
               <span class="badge bg-success">Activo</span>
             </div>
           </div>
+          <div class="row">
+            <div class="col-sm-4 fw-bold">Miembro desde:</div>
+            <div class="col-sm-8">{{ currentUser?.createdAt | date:'dd/MM/yyyy' }}</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Acciones rápidas para empleados -->
+    <!-- Acciones Rápidas -->
     <div class="col-md-6">
       <div class="card">
         <div class="card-header">
@@ -172,19 +211,29 @@
         </div>
         <div class="card-body">
           <div class="d-grid gap-2">
-            <!-- Botones de acciones para empleados -->
-            <button class="btn btn-outline-primary btn-sm">
+            <button class="btn btn-outline-primary btn-sm" disabled>
               <i class="fas fa-list me-1"></i>
-              Ver Todos los Productos
+              Ver Inventario Completo
             </button>
-            <button class="btn btn-outline-warning btn-sm">
+            <button class="btn btn-outline-warning btn-sm" disabled>
               <i class="fas fa-chart-bar me-1"></i>
-              Reporte de Stock
+              Generar Reporte de Stock
             </button>
-            <button class="btn btn-outline-info btn-sm">
+            <button class="btn btn-outline-info btn-sm" disabled>
               <i class="fas fa-question-circle me-1"></i>
               Solicitar Ayuda
             </button>
+            <button class="btn btn-outline-success btn-sm" disabled>
+              <i class="fas fa-bell me-1"></i>
+              Notificar Stock Bajo
+            </button>
+          </div>
+          <div class="mt-3 p-3 bg-light rounded">
+            <small class="text-muted">
+              <i class="fas fa-info-circle me-1"></i>
+              Como empleado, tienes acceso de solo lectura al sistema.
+              Contacta a un administrador para realizar modificaciones.
+            </small>
           </div>
         </div>
       </div>

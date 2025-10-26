@@ -23,7 +23,7 @@ export class LoginComponent {
     private router: Router
   ) {
     this.loginForm = this.formBuilder.group({
-      email: ['admin@magnum.com', [Validators.required, Validators.email]],
+      email: ['empleado@magnum.com', [Validators.required, Validators.email]],
       password: ['123456', [Validators.required, Validators.minLength(6)]]
     });
   }
@@ -34,24 +34,13 @@ export class LoginComponent {
       this.error = '';
 
       const credentials: LoginCredentials = this.loginForm.value;
+      console.log('🔵 Iniciando login para:', credentials.email);
 
       this.authService.login(credentials).subscribe({
         next: (response) => {
-          console.log('✅ Login exitoso, redirigiendo...');
+          console.log('✅ Login exitoso en componente');
           this.loading = false;
-          
-          // El auth service ya guardó el usuario, ahora redirigir según el rol
-          const currentUser = this.authService.getCurrentUser();
-          
-          if (currentUser) {
-            if (currentUser.role === 'admin') {
-              this.router.navigate(['/admin/dashboard']);
-            } else {
-              this.router.navigate(['/employee/dashboard']);
-            }
-          } else {
-            this.error = 'Error: Usuario no encontrado después del login';
-          }
+          // La redirección ahora se maneja en el AuthService
         },
         error: (error) => {
           console.error('❌ Error en login:', error);
@@ -69,6 +58,22 @@ export class LoginComponent {
     } else {
       this.markFormGroupTouched();
     }
+  }
+
+  // Método para probar login rápido
+  quickLogin(role: 'admin' | 'employee') {
+    if (role === 'admin') {
+      this.loginForm.patchValue({
+        email: 'admin@magnum.com',
+        password: '123456'
+      });
+    } else {
+      this.loginForm.patchValue({
+        email: 'empleado@magnum.com', 
+        password: '123456'
+      });
+    }
+    this.onSubmit();
   }
 
   private markFormGroupTouched() {

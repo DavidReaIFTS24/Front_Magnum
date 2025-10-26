@@ -1,0 +1,27 @@
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.btn-group-sm > .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+.card {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+}
